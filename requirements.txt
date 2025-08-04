@@ -1,0 +1,9 @@
+streamlit
+st-annotated-text
+langchain-openai
+presidio-analyzer
+presidio-anonymizer
+spacy==3.7.2 # Feste Version für Kompatibilität
+https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz#egg=de_core_news_sm
+torch
+transformers
