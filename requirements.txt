@@ -2,17 +2,16 @@
 streamlit
 st-annotated-text
 
-# Presidio & GLiNER - der offizielle und robusteste Weg
-# Wir verwenden das '[gliner]' extra, damit presidio-analyzer die korrekten Versionen
-# von gliner, spacy, numpy, torch, transformers und tqdm automatisch installiert.
-# Dies vermeidet die Kompatibilitätsfehler, die wir zuvor gesehen haben.
+# Presidio & GLiNER - Finale, robuste Konfiguration
+# Wir kombinieren den offiziellen Weg mit einem expliziten Downgrade von numpy,
+# um die binäre Inkompatibilität in der Cloud-Umgebung endgültig zu beheben.
+numpy<2.0
 presidio-analyzer[gliner]
 presidio-anonymizer
 
 # Deutsches Spacy-Modell
-# Dieses muss separat installiert werden, da es ein Sprachmodell ist.
 de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz
 
-# Langchain für die (simulierte) LLM-Funktionalität
+# Langchain
 langchain
 langchain-openai
