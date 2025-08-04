@@ -9,7 +9,7 @@ numpy<2.0
 spacy<3.8.0 # Bleiben wir bei einer bewährten Version
 presidio-analyzer
 presidio-anonymizer
-presidio[gliner]
+presidio-analyzer[gliner]
 
 # Deutsches Spacy-Modell
 de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz
