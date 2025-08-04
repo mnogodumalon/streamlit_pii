@@ -13,5 +13,5 @@ presidio-anonymizer
 de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz
 
 # Langchain
-langchain
-langchain-openai
+#langchain
+#langchain-openai
