@@ -14,6 +14,8 @@ from presidio_analyzer.predefined_recognizers import GLiNERRecognizer
 from presidio_anonymizer import AnonymizerEngine, DeanonymizeEngine, OperatorConfig
 from presidio_anonymizer.entities import OperatorResult, RecognizerResult
 from presidio_anonymizer.operators import Operator, OperatorType
+from huggingface_hub import snapshot_download, HfFolder
+from pathlib import Path
 
 # --- Operator-Klassen (unverändert) ---
 class InstanceCounterAnonymizer(Operator):
@@ -53,6 +55,33 @@ class InstanceCounterDeanonymizer(Operator):
 
 # --- Engine-Konfiguration (in Funktionen gekapselt und mit Caching) ---
 
+# --- NEU: Pre-Flight Check und manueller Download ---
+# Setzen Sie hier Ihren Hugging Face Token, falls das Modell privat ist oder Rate Limits ein Problem sind.
+# HfFolder.save_token("hf_...") 
+MODEL_NAME = "urchade/gliner_multi_pii-v1"
+
+@st.cache_resource
+def ensure_model_is_downloaded(model_name: str) -> Path:
+    """
+    Stellt sicher, dass das Hugging Face Modell heruntergeladen ist,
+    um Konflikte mit dem Streamlit Caching zu vermeiden.
+    Gibt den lokalen Pfad zum Modell zurück.
+    """
+    st.info(f"Überprüfe, ob das Modell '{model_name}' vorhanden ist...")
+    try:
+        # snapshot_download lädt das Modell nur herunter, wenn es nicht bereits im Cache ist.
+        model_path = snapshot_download(repo_id=model_name)
+        st.success(f"Modell '{model_name}' ist bereit unter: {model_path}")
+        return Path(model_path)
+    except Exception as e:
+        st.error(f"Fehler beim Herunterladen des Modells: {e}")
+        st.stop()
+
+# Führe den Download aus, BEVOR die App versucht, die Analyzer zu initialisieren.
+# Das Ergebnis (der Pfad) wird ebenfalls gecached.
+LOCAL_MODEL_PATH = ensure_model_is_downloaded(MODEL_NAME)
+
+
 # Streamlit's Caching, um die Modelle nur einmal zu laden
 @st.cache_resource
 def setup_gliner_only_analyzer():
@@ -80,7 +109,7 @@ def setup_gliner_only_analyzer():
     }
 
     gliner_recognizer = GLiNERRecognizer(
-        model_name="urchade/gliner_multi_pii-v1",
+        model_name=str(LOCAL_MODEL_PATH), # Verwende den lokalen Pfad
         entity_mapping=STANDARD_PII_GLINER_MAP_DE
     )
     gliner_recognizer.supported_language = "de"
@@ -114,7 +143,7 @@ def setup_hybrid_analyzer():
         "Benutzername": "USERNAME", "Datum": "DATE_TIME", "Berufsbezeichnung": "TITLE",
     }
     gliner_recognizer = GLiNERRecognizer(
-        model_name="urchade/gliner_multi_pii-v1", 
+        model_name=str(LOCAL_MODEL_PATH), # Verwende den lokalen Pfad
         entity_mapping=gliner_context_mapping
     )
     gliner_recognizer.supported_language = "de"
