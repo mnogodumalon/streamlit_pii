@@ -3,8 +3,10 @@ streamlit
 st-annotated-text
 
 # Presidio, Spacy & GLiNER
-# Wir stellen sicher, dass eine Spacy-Version installiert wird, die mit numpy 2.0+ kompatibel ist.
-spacy>=3.7.5,<3.8.0
+# LÖSUNG: Wir pinnen numpy auf eine Version < 2.0, um die binäre Inkompatibilität zu beheben.
+# Dies ist die robusteste Lösung für den "numpy.dtype size changed"-Fehler.
+numpy<2.0
+spacy<3.8.0 # Bleiben wir bei einer bewährten Version
 presidio-analyzer
 presidio-anonymizer
 gliner
