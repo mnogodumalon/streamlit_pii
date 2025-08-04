@@ -6,8 +6,8 @@ from annotated_text import annotated_text
 import spacy
 
 # --- Abhängigkeiten aus dem Originalskript ---
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+#from langchain_openai import ChatOpenAI
+#from langchain.prompts import PromptTemplate
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry, AnalysisExplanation
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_analyzer.predefined_recognizers import GLiNERRecognizer
