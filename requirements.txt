@@ -1,9 +1,16 @@
+# Hauptanwendung
 streamlit
 st-annotated-text
-langchain-openai
+
+# Presidio, Spacy & GLiNER
+# Wir stellen sicher, dass eine Spacy-Version installiert wird, die mit numpy 2.0+ kompatibel ist.
+spacy>=3.7.5,<3.8.0
 presidio-analyzer
 presidio-anonymizer
-spacy==3.7.2 # Feste Version für Kompatibilität
-https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz#egg=de_core_news_sm
-torch
-transformers
+gliner
+
+# Deutsches Spacy-Modell
+de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz
+
+# Langchain für die (simulierte) LLM-Funktionalität
+langchain-openai
