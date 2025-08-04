@@ -78,8 +78,7 @@ def ensure_model_is_downloaded(model_name: str) -> Path:
         st.stop()
 
 # Führe den Download aus, BEVOR die App versucht, die Analyzer zu initialisieren.
-# Das Ergebnis (der Pfad) wird ebenfalls gecached.
-LOCAL_MODEL_PATH = ensure_model_is_downloaded(MODEL_NAME)
+ensure_model_is_downloaded(MODEL_NAME)
 
 
 # Streamlit's Caching, um die Modelle nur einmal zu laden
@@ -109,7 +108,7 @@ def setup_gliner_only_analyzer():
     }
 
     gliner_recognizer = GLiNERRecognizer(
-        model_name=str(LOCAL_MODEL_PATH), # Verwende den lokalen Pfad
+        model_name=MODEL_NAME, # Lade jetzt direkt mit dem Namen, da das Modell im Cache ist.
         entity_mapping=STANDARD_PII_GLINER_MAP_DE
     )
     gliner_recognizer.supported_language = "de"
@@ -143,7 +142,7 @@ def setup_hybrid_analyzer():
         "Benutzername": "USERNAME", "Datum": "DATE_TIME", "Berufsbezeichnung": "TITLE",
     }
     gliner_recognizer = GLiNERRecognizer(
-        model_name=str(LOCAL_MODEL_PATH), # Verwende den lokalen Pfad
+        model_name=MODEL_NAME, # Lade jetzt direkt mit dem Namen, da das Modell im Cache ist.
         entity_mapping=gliner_context_mapping
     )
     gliner_recognizer.supported_language = "de"
