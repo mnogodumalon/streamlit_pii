@@ -16,3 +16,4 @@ de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de
 
 # Langchain für die (simulierte) LLM-Funktionalität
 langchain-openai
+langchain
