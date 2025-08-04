@@ -81,50 +81,14 @@ def ensure_model_is_downloaded(model_name: str) -> Path:
 ensure_model_is_downloaded(MODEL_NAME)
 
 
-# Streamlit's Caching, um die Modelle nur einmal zu laden
 @st.cache_resource
-def setup_gliner_only_analyzer():
-    """Initialisiert den Analyzer NUR mit GLiNER."""
-    st.info("Initialisiere 'Nur GLiNER'-Analyzer... (erster Start kann dauern)")
-    nlp_config = {
-        "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "de", "model_name": "de_core_news_sm"}],
-    }
-    provider = NlpEngineProvider(nlp_configuration=nlp_config)
-    nlp_engine = provider.create_engine()
-    registry = RecognizerRegistry(supported_languages=["de"])
-
-    STANDARD_PII_GLINER_MAP_DE = {
-        "person": "PERSON", "name": "PERSON", "benutzername": "USERNAME",
-        "sozialversicherungsnummer": "DE_SOCIAL_SECURITY_NUMBER", "versicherungsnummer": "ID_NUMBER",
-        "identifikationsnummer": "ID_NUMBER", "steuer-id": "TAX_ID", "reisepassnummer": "PASSPORT_NUMBER",
-        "führerscheinnummer": "DRIVERS_LICENSE", "ort": "LOCATION", "stadt": "LOCATION",
-        "land": "LOCATION", "adresse": "ADDRESS", "straße": "ADDRESS", "postleitzahl": "ZIP_CODE",
-        "telefonnummer": "PHONE_NUMBER", "handynummer": "PHONE_NUMBER", "e-mail-adresse": "EMAIL_ADDRESS",
-        "kreditkartennummer": "CREDIT_CARD_NUMBER", "bankkontonummer": "BANK_ACCOUNT_NUMBER", "iban": "IBAN",
-        "ip-adresse": "IP_ADDRESS", "mac-adresse": "MAC_ADDRESS", "webseite": "URL", "firma": "ORGANIZATION",
-        "organisation": "ORGANIZATION", "unternehmen": "ORGANIZATION", "datum": "DATE_TIME",
-        "uhrzeit": "DATE_TIME", "kundennummer": "ID_NUMBER"
-    }
-
-    gliner_recognizer = GLiNERRecognizer(
-        model_name=MODEL_NAME, # Lade jetzt direkt mit dem Namen, da das Modell im Cache ist.
-        entity_mapping=STANDARD_PII_GLINER_MAP_DE
-    )
-    gliner_recognizer.supported_language = "de"
-    registry.add_recognizer(gliner_recognizer)
+def get_analyzer(mode: str) -> AnalyzerEngine:
+    """
+    Lädt und cacht den Analyzer basierend auf dem ausgewählten Modus.
+    Dies stellt sicher, dass immer nur die benötigten Modelle im Speicher sind.
+    """
+    st.info(f"Initialisiere '{mode}'-Analyzer... (erster Start kann dauern)")
     
-    analyzer = AnalyzerEngine(
-        nlp_engine=nlp_engine,
-        registry=registry,
-        supported_languages=["de"]
-    )
-    return analyzer
-
-@st.cache_resource
-def setup_hybrid_analyzer():
-    """Initialisiert den hybriden Analyzer (Presidio-Regeln + GLiNER)."""
-    st.info("Initialisiere Hybrid-Analyzer... (erster Start kann dauern)")
     nlp_config = {
         "nlp_engine_name": "spacy",
         "models": [{"lang_code": "de", "model_name": "de_core_news_sm"}],
@@ -133,26 +97,48 @@ def setup_hybrid_analyzer():
     nlp_engine = provider.create_engine()
     registry = RecognizerRegistry(supported_languages=["de"])
 
-    # Presidio's starke, musterbasierte Erkenner laden
-    registry.load_predefined_recognizers(languages=["de"])
+    if mode == "Nur GLiNER":
+        # Konfiguration für den reinen GLiNER-Modus
+        STANDARD_PII_GLINER_MAP_DE = {
+            "person": "PERSON", "name": "PERSON", "benutzername": "USERNAME",
+            "sozialversicherungsnummer": "DE_SOCIAL_SECURITY_NUMBER", "versicherungsnummer": "ID_NUMBER",
+            "identifikationsnummer": "ID_NUMBER", "steuer-id": "TAX_ID", "reisepassnummer": "PASSPORT_NUMBER",
+            "führerscheinnummer": "DRIVERS_LICENSE", "ort": "LOCATION", "stadt": "LOCATION",
+            "land": "LOCATION", "adresse": "ADDRESS", "straße": "ADDRESS", "postleitzahl": "ZIP_CODE",
+            "telefonnummer": "PHONE_NUMBER", "handynummer": "PHONE_NUMBER", "e-mail-adresse": "EMAIL_ADDRESS",
+            "kreditkartennummer": "CREDIT_CARD_NUMBER", "bankkontonummer": "BANK_ACCOUNT_NUMBER", "iban": "IBAN",
+            "ip-adresse": "IP_ADDRESS", "mac-adresse": "MAC_ADDRESS", "webseite": "URL", "firma": "ORGANIZATION",
+            "organisation": "ORGANIZATION", "unternehmen": "ORGANIZATION", "datum": "DATE_TIME",
+            "uhrzeit": "DATE_TIME", "kundennummer": "ID_NUMBER"
+        }
+        gliner_recognizer = GLiNERRecognizer(
+            model_name=MODEL_NAME,
+            entity_mapping=STANDARD_PII_GLINER_MAP_DE
+        )
+        gliner_recognizer.supported_language = "de"
+        registry.add_recognizer(gliner_recognizer)
 
-    # GLiNER *nur* für kontextabhängige Entitäten konfigurieren
-    gliner_context_mapping = {
-        "Person": "PERSON", "Firma": "ORGANIZATION", "Organisation": "ORGANIZATION",
-        "Benutzername": "USERNAME", "Datum": "DATE_TIME", "Berufsbezeichnung": "TITLE",
-    }
-    gliner_recognizer = GLiNERRecognizer(
-        model_name=MODEL_NAME, # Lade jetzt direkt mit dem Namen, da das Modell im Cache ist.
-        entity_mapping=gliner_context_mapping
-    )
-    gliner_recognizer.supported_language = "de"
-    registry.add_recognizer(gliner_recognizer)
+    elif mode == "Hybrid (Empfohlen)":
+        # Konfiguration für den Hybrid-Modus
+        registry.load_predefined_recognizers(languages=["de"])
+        gliner_context_mapping = {
+            "Person": "PERSON", "Firma": "ORGANIZATION", "Organisation": "ORGANIZATION",
+            "Benutzername": "USERNAME", "Datum": "DATE_TIME", "Berufsbezeichnung": "TITLE",
+        }
+        gliner_recognizer = GLiNERRecognizer(
+            model_name=MODEL_NAME, 
+            entity_mapping=gliner_context_mapping
+        )
+        gliner_recognizer.supported_language = "de"
+        registry.add_recognizer(gliner_recognizer)
+        try:
+            registry.remove_recognizer("SpacyRecognizer", language="de")
+        except ValueError:
+            pass
 
-    # Standard SpacyRecognizer entfernen, um Konflikte zu vermeiden
-    try:
-        registry.remove_recognizer("SpacyRecognizer", language="de")
-    except ValueError:
-        pass # Ignorieren, falls nicht vorhanden
+    elif mode == "Nur Presidio (Standard)":
+        # Konfiguration für den Standard-Presidio-Modus
+        registry.load_predefined_recognizers(languages=["de"])
 
     analyzer = AnalyzerEngine(
         nlp_engine=nlp_engine,
@@ -161,39 +147,6 @@ def setup_hybrid_analyzer():
     )
     return analyzer
 
-@st.cache_resource
-def setup_presidio_default_analyzer():
-    """Initialisiert den Analyzer mit den Presidio-Standard-Erkennern (regelbasiert + Spacy NER)."""
-    st.info("Initialisiere 'Nur Presidio (Standard)'-Analyzer...")
-    nlp_config = {
-        "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "de", "model_name": "de_core_news_sm"}],
-    }
-    provider = NlpEngineProvider(nlp_configuration=nlp_config)
-    nlp_engine = provider.create_engine()
-    registry = RecognizerRegistry(supported_languages=["de"])
-
-    # Lädt die Standard-Erkenner von Presidio, inkl. der Muster-Erkenner und des SpacyRecognizers
-    registry.load_predefined_recognizers(languages=["de"])
-
-    analyzer = AnalyzerEngine(
-        nlp_engine=nlp_engine,
-        registry=registry,
-        supported_languages=["de"]
-    )
-    return analyzer
-
-
-@st.cache_resource
-def get_spacy_model(model_name="de_core_news_sm"):
-    """Lädt und gibt ein Spacy-Modell zurück."""
-    try:
-        nlp = spacy.load(model_name)
-    except OSError:
-        st.info(f"Spacy-Modell '{model_name}' nicht gefunden. Lade es herunter...")
-        spacy.cli.download(model_name)
-        nlp = spacy.load(model_name)
-    return nlp
 
 @st.cache_resource
 def setup_anonymizer_deanonymizer():
@@ -381,16 +334,9 @@ analysis_mode = st.radio(
 )
 
 # Lade den passenden Analyzer basierend auf der Auswahl
-if analysis_mode == "Nur GLiNER":
-    analyzer = setup_gliner_only_analyzer()
-elif analysis_mode == "Nur Presidio (Standard)":
-    analyzer = setup_presidio_default_analyzer()
-else: # Hybrid ist der Standard
-    analyzer = setup_hybrid_analyzer()
-
+analyzer = get_analyzer(analysis_mode)
 
 # Lade Modelle und Engines
-# analyzer = setup_analyzer() # Wird jetzt oben basierend auf Modus geladen
 nlp = get_spacy_model()
 sample_text = "..." # Fügen Sie hier Ihren langen Beispieltext ein, falls gewünscht
 
