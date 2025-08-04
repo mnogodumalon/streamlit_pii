@@ -2,19 +2,17 @@
 streamlit
 st-annotated-text
 
-# Presidio, Spacy & GLiNER
-# LÖSUNG: Wir pinnen numpy auf eine Version < 2.0, um die binäre Inkompatibilität zu beheben.
-# Dies ist die robusteste Lösung für den "numpy.dtype size changed"-Fehler.
-numpy<2.0
-spacy<3.8.0 # Bleiben wir bei einer bewährten Version
-presidio-analyzer
-presidio-anonymizer
+# Presidio & GLiNER - der offizielle und robusteste Weg
+# Wir verwenden das '[gliner]' extra, damit presidio-analyzer die korrekten Versionen
+# von gliner, spacy, numpy, torch, transformers und tqdm automatisch installiert.
+# Dies vermeidet die Kompatibilitätsfehler, die wir zuvor gesehen haben.
 presidio-analyzer[gliner]
+presidio-anonymizer
 
 # Deutsches Spacy-Modell
+# Dieses muss separat installiert werden, da es ein Sprachmodell ist.
 de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.7.0/de_core_news_sm-3.7.0.tar.gz
 
 # Langchain für die (simulierte) LLM-Funktionalität
-langchain-openai
 langchain
-tqdm>=4.66.0
+langchain-openai
