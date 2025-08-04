@@ -6,7 +6,7 @@ st-annotated-text
 # Wir kombinieren den offiziellen Weg mit einem expliziten Downgrade von numpy,
 # um die binäre Inkompatibilität in der Cloud-Umgebung endgültig zu beheben.
 numpy<2.0
-'presidio-analyzer[gliner]'
+presidio-analyzer[gliner]
 presidio-anonymizer
 
 # Deutsches Spacy-Modell
